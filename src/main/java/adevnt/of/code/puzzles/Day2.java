@@ -1,14 +1,16 @@
 package adevnt.of.code.puzzles;
 
 import adevnt.of.code.Utils.Util;
+import adevnt.of.code.model.Day11Prop;
 import org.javatuples.Pair;
 import org.javatuples.Triplet;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Scanner;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class Day2 {
@@ -16,7 +18,7 @@ public class Day2 {
         try {
             String[] input = Util.loadResource("Day2").split(",");
             List<BigInteger> intArr = Arrays.stream(input).map(BigInteger::new).collect(Collectors.toList());
-            for(int i = intArr.size(); i<10010; i++){
+            for (int i = intArr.size(); i < 10010; i++) {
                 intArr.add(new BigInteger("0"));
             }
             /*boolean found = false;
@@ -38,23 +40,26 @@ public class Day2 {
                 }
             }*/
             workOnMainArray(intArr, new BigInteger("1"), new BigInteger("0"));
-            System.out.println(intArr);
+            //System.out.println(intArr);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
 
-    static Pair<BigInteger, List<BigInteger>> workOnMainArray(List<BigInteger> intArr, BigInteger manualInput1,
-                                                 BigInteger manualInput2) {
+    static Pair<List<BigInteger>, List<BigInteger>> workOnMainArray(List<BigInteger> intArr, BigInteger manualInput1,
+                                                                    BigInteger manualInput2) {
         //intArr.set(9, new BigInteger("8"));
         BigInteger relativeBase = new BigInteger("0");
         boolean quit = false;
         int initPos = 0;
-        BigInteger output = new BigInteger("0");
+        List<BigInteger> outputList = new ArrayList<>(1);
         int manualInputCount = 0;
         BigInteger manualInput = new BigInteger("0");
         boolean outputBool = false;
+        Day11Prop day11Prop = new Day11Prop();
+        Map<String, Integer> panelMap = new HashMap<>(1);
+        panelMap.put("0,0",1);
         while (initPos < intArr.size() && !quit && !outputBool) {
             int opcode = intArr.get(initPos).intValue();
             //System.out.println("opcode: " + opcode);
@@ -63,33 +68,49 @@ public class Day2 {
                 opcode = digits[digits.length - 1];
             }
             if (opcode == 1 || opcode == 2 || opcode == 7 || opcode == 8) {
-                List<BigInteger> subArr = intArr.subList(initPos, initPos+4);
+                List<BigInteger> subArr = intArr.subList(initPos, initPos + 4);
                 workOnSubArray(intArr, subArr, initPos, manualInput, relativeBase);
                 initPos += 4;
             }
             if (opcode == 3 || opcode == 4 || opcode == 9) {
-                List<BigInteger> subArr = intArr.subList( initPos, initPos + 2);
-                if(manualInputCount == 1){
+                List<BigInteger> subArr = intArr.subList(initPos, initPos + 2);
+                if (manualInputCount == 1) {
                     manualInput = manualInput2;
-                } else if (manualInputCount == 0){
+                } else if (manualInputCount == 0) {
                     manualInput = manualInput1;
                 }
-                if(manualInputCount > 2){
-                    System.out.println(manualInputCount);
+                if (opcode == 3) {
+                    if (panelMap.containsKey(day11Prop.getX() + "," + day11Prop.getY())) {
+                        manualInput =
+                                (panelMap.get(day11Prop.getX() + "," + day11Prop.getY()) == 0) ?
+                                BigInteger.ZERO :
+                                BigInteger.ONE;
+                        System.out.println("Panel is: " + ((panelMap.get(day11Prop.getX() + "," + day11Prop.getY()) == 0)?"BLACK":"WHITE"));
+                    } else {
+                        System.out.println("Panel is: BLACK");
+                        manualInput = BigInteger.ZERO;
+                    }
+                    System.out.println("ManualInput: "+ manualInput);
+
                 }
                 Triplet<Integer, BigInteger, BigInteger> response = workOnSubArray(intArr, subArr, initPos, manualInput,
                         relativeBase);
-                output = response.getValue1();
-                manualInput = output;
+                //manualInput = output;
                 initPos += 2;
-                if(opcode == 3){
+                if (opcode == 3) {
                     manualInputCount++;
                 }
-                if(opcode == 4){
-                    System.out.println(response.getValue1());
+                if (opcode == 4) {
+                    outputList.add(response.getValue1());
+                    if (outputList.size() == 2) {
+                        Day11.changeDirBasedOnOutput(outputList, day11Prop, panelMap);
+                        //manualInput = day11Prop.getManualInput();
+                        outputList = new ArrayList<>(1);
+                    }
+
                     //outputBool = true;
                 }
-                if(opcode == 9){
+                if (opcode == 9) {
                     relativeBase = response.getValue2();
                 }
             }
@@ -100,23 +121,38 @@ public class Day2 {
 
             if (opcode == 99) {
                 quit = true;
-                initPos++;
-                System.out.println(initPos);
+                //initPos++;
+                //System.out.println(initPos);
             }
         }
-        System.out.println(relativeBase);
-        return new Pair<>(output, intArr);
+        //System.out.println(relativeBase);
+        int[][] panelImage = new int[10][50];
+        System.out.println("panel map: " + panelMap);
+        System.out.println("panel map size: " + panelMap.size());
+        for (Map.Entry<String, Integer> entry: panelMap.entrySet()) {
+            String[] splitKey = entry.getKey().split(",");
+            int x = Integer.parseInt(splitKey[0]);
+            int y = Integer.parseInt(splitKey[1]);
+
+            panelImage[y][x] = entry.getValue();
+        }
+        for (int i = 0; i <10 ; i++) {
+            System.out.println(Arrays.toString(panelImage[i]));
+        }
+        return new Pair<>(outputList, intArr);
     }
 
-    private static Triplet<Integer, BigInteger, BigInteger> workOnSubArray(List<BigInteger> intArr, List<BigInteger> subArr,
-                                                                   int initPos,
-                                                               BigInteger manualInput, BigInteger relativeBase ) {
+    private static Triplet<Integer, BigInteger, BigInteger> workOnSubArray(List<BigInteger> intArr,
+                                                                           List<BigInteger> subArr,
+                                                                           int initPos,
+                                                                           BigInteger manualInput,
+                                                                           BigInteger relativeBase) {
         BigInteger param1 = new BigInteger("0");
         BigInteger param2 = new BigInteger("0");
         BigInteger param3 = new BigInteger("0");
         int opcode = subArr.get(0).intValue();
         BigInteger output = new BigInteger("0");
-        System.out.println(initPos);
+        //System.out.println(initPos);
         if (opcode > 100) {
             int[] digits = Integer.toString(opcode).chars().map(c -> c - '0').toArray();
             opcode = digits[digits.length - 1];
@@ -135,26 +171,26 @@ public class Day2 {
                 param1 = subArr.get(1);
             } else if (splitOpcode[2] == 0) {
                 param1 = intArr.get(subArr.get(1).intValue());
-            } else if (splitOpcode[2] == 2){
+            } else if (splitOpcode[2] == 2) {
                 param1 = intArr.get((subArr.get(1).add(relativeBase)).intValue());
-                if(opcode == 3){
+                if (opcode == 3) {
                     param1 = subArr.get(1).add(relativeBase);
                 }
             }
 
 
-            if (opcode != 4 && opcode != 9 && opcode!= 3) {
+            if (opcode != 4 && opcode != 9 && opcode != 3) {
                 if (splitOpcode[1] == 1) {
                     param2 = subArr.get(2);
                 } else if (splitOpcode[1] == 0) {
                     param2 = intArr.get(subArr.get(2).intValue());
-                } else if (splitOpcode[1] == 2){
+                } else if (splitOpcode[1] == 2) {
                     param2 = intArr.get(subArr.get(2).add(relativeBase).intValue());
                 }
-                if(subArr.size() == 4){
+                if (subArr.size() == 4) {
                     if (splitOpcode[0] == 0) {
                         param3 = subArr.get(3);
-                    } else if (splitOpcode[0] == 2){
+                    } else if (splitOpcode[0] == 2) {
                         param3 = subArr.get(3).add(relativeBase);
                     }
                 }
@@ -164,7 +200,7 @@ public class Day2 {
         } else {
             if (opcode == 4 || opcode == 3 || opcode == 9) {
                 param1 = intArr.get(subArr.get(1).intValue());
-                if(opcode == 3){
+                if (opcode == 3) {
                     param1 = subArr.get(1);
                 }
             } else {
@@ -179,20 +215,22 @@ public class Day2 {
         }*/
         switch (opcode) {
             case 1:
-                intArr.set(param3.intValue(),  param1.add(param2));
+                intArr.set(param3.intValue(), param1.add(param2));
                 //System.out.println("new value: " + intArr.get(param3.intValue()));
                 break;
             case 2:
-                intArr.set(param3.intValue(),  param1.multiply(param2));
+                intArr.set(param3.intValue(), param1.multiply(param2));
                 //System.out.println("new value: " + intArr.get(param3.intValue()));
                 break;
             case 3:
                 //intArr[subArr[1].intValue()] = manualInput;
-                System.out.println("Enter a value: ");
-                Scanner scanner = new Scanner(System.in);
-                intArr.set(param1.intValue(), new BigInteger("2"));
+                //System.out.println("Enter a value: ");
+                //Scanner scanner = new Scanner(System.in);
+                //intArr.set(param1.intValue(), scanner.nextBigInteger());
+                //scanner.close();
+                intArr.set(param1.intValue(), manualInput);
                 //System.out.println(intArr);
-                scanner.close();
+
                 break;
             case 4:
                 System.out.println("Value at address " + subArr.get(1) + " is " + param1);
