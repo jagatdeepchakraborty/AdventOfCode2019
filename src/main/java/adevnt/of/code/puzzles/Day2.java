@@ -80,7 +80,10 @@ public class Day2 {
                     manualInput = manualInput1;
                 }
                 if (opcode == 3) {
-                    if (panelMap.containsKey(day11Prop.getX() + "," + day11Prop.getY())) {
+                    manualInput = new BigInteger(Day13.moveJoystick(outputList)+"");
+                    manualInputCount++;
+                    System.out.println("manualInputCount: " + manualInputCount);
+                    /*if (panelMap.containsKey(day11Prop.getX() + "," + day11Prop.getY())) {
                         manualInput =
                                 (panelMap.get(day11Prop.getX() + "," + day11Prop.getY()) == 0) ?
                                 BigInteger.ZERO :
@@ -89,7 +92,8 @@ public class Day2 {
                     } else {
                         System.out.println("Panel is: BLACK");
                         manualInput = BigInteger.ZERO;
-                    }
+                    }*/
+                    //manualInput = BigInteger.ZERO;
                     System.out.println("ManualInput: "+ manualInput);
 
                 }
@@ -103,9 +107,9 @@ public class Day2 {
                 if (opcode == 4) {
                     outputList.add(response.getValue1());
                     if (outputList.size() == 2) {
-                        Day11.changeDirBasedOnOutput(outputList, day11Prop, panelMap);
+                        //Day11.changeDirBasedOnOutput(outputList, day11Prop, panelMap);
                         //manualInput = day11Prop.getManualInput();
-                        outputList = new ArrayList<>(1);
+                        //outputList = new ArrayList<>(1);
                     }
 
                     //outputBool = true;
@@ -126,10 +130,10 @@ public class Day2 {
             }
         }
         //System.out.println(relativeBase);
-        int[][] panelImage = new int[10][50];
-        System.out.println("panel map: " + panelMap);
-        System.out.println("panel map size: " + panelMap.size());
-        for (Map.Entry<String, Integer> entry: panelMap.entrySet()) {
+        //int[][] panelImage = new int[10][50];
+        //System.out.println("panel map: " + panelMap);
+        //System.out.println("panel map size: " + panelMap.size());
+        /*for (Map.Entry<String, Integer> entry: panelMap.entrySet()) {
             String[] splitKey = entry.getKey().split(",");
             int x = Integer.parseInt(splitKey[0]);
             int y = Integer.parseInt(splitKey[1]);
@@ -138,7 +142,7 @@ public class Day2 {
         }
         for (int i = 0; i <10 ; i++) {
             System.out.println(Arrays.toString(panelImage[i]));
-        }
+        }*/
         return new Pair<>(outputList, intArr);
     }
 
